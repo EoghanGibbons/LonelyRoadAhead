@@ -2,11 +2,21 @@ package ie.itcarlow.lonelyroadahead;
 
 import org.andengine.engine.Engine;
 import org.andengine.engine.camera.Camera;
+import org.andengine.opengl.font.Font;
+import org.andengine.opengl.font.FontFactory;
+import org.andengine.opengl.texture.ITexture;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
+import org.andengine.opengl.texture.atlas.bitmap.BuildableBitmapTextureAtlas;
+import org.andengine.opengl.texture.atlas.bitmap.source.IBitmapTextureAtlasSource;
+import org.andengine.opengl.texture.atlas.buildable.builder.BlackPawnTextureAtlasBuilder;
+import org.andengine.opengl.texture.atlas.buildable.builder.ITextureAtlasBuilder.TextureAtlasBuilderException;
 import org.andengine.opengl.texture.region.ITextureRegion;
 import org.andengine.opengl.vbo.VertexBufferObjectManager;
+import org.andengine.util.debug.Debug;
+
+import android.graphics.Color;
 
 public class ResourceManager
 {
@@ -22,7 +32,13 @@ public class ResourceManager
     public VertexBufferObjectManager vbom;
     
     public ITextureRegion splash_region;
-    private BitmapTextureAtlas splashTextureAtlas;
+    public ITextureRegion menu_background_region;
+    public ITextureRegion play_region;
+    public ITextureRegion options_region;
+    
+    private BitmapTextureAtlas splashTextureAtlas;   
+    private BuildableBitmapTextureAtlas menuTextureAtlas;
+    public Font font;
     
     //---------------------------------------------
     // TEXTURES & TEXTURE REGIONS
@@ -34,8 +50,9 @@ public class ResourceManager
 
     public void loadMenuResources()
     {
-        loadMenuGraphics();
+    	loadMenuGraphics();
         loadMenuAudio();
+        loadMenuFonts();
     }
     
     public void loadGameResources()
@@ -45,9 +62,30 @@ public class ResourceManager
         loadGameAudio();
     }
     
-    private void loadMenuGraphics()
+    private void loadMenuGraphics(){
+    	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("");
+    	menuTextureAtlas = new BuildableBitmapTextureAtlas(activity.getTextureManager(), 1024, 1024, TextureOptions.BILINEAR);
+    	menu_background_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "menu_background_temp.png");
+    	play_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "play.png");
+    	options_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(menuTextureAtlas, activity, "options.png");
+    	
+    	try {
+    	    this.menuTextureAtlas.build(new BlackPawnTextureAtlasBuilder<IBitmapTextureAtlasSource, BitmapTextureAtlas>(0, 1, 0));
+    	    this.menuTextureAtlas.load();
+    	} 
+    	catch (final TextureAtlasBuilderException e){
+    	        Debug.e(e);
+    	}
+    }
+
+    public void loadMenuTextures()
     {
-        
+        menuTextureAtlas.load();
+    }
+    
+    public void unloadMenuTextures()
+    {
+        menuTextureAtlas.unload();
     }
     
     private void loadMenuAudio()
@@ -55,6 +93,19 @@ public class ResourceManager
         
     }
 
+    private void loadMenuFonts(){
+        FontFactory.setAssetBasePath("");
+        final ITexture mainFontTexture = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
+
+        font = FontFactory.createStrokeFromAsset(activity.getFontManager(), mainFontTexture, activity.getAssets(), "font.ttf", 50, true, Color.WHITE, 2, Color.BLACK);
+        font.load();
+    }
+    
+    public void unloadGameTextures()
+    {
+        // TODO (Since we did not create any textures for game scene yet)
+    }
+    
     private void loadGameGraphics()
     {
         

@@ -1,6 +1,8 @@
 package ie.itcarlow.lonelyroadahead;
 
 import org.andengine.engine.Engine;
+import org.andengine.engine.handler.timer.ITimerCallback;
+import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.ui.IGameInterface.OnCreateSceneCallback;
 
 public class SceneManager
@@ -19,11 +21,8 @@ public class SceneManager
     //---------------------------------------------
     
     private static final SceneManager INSTANCE = new SceneManager();
-    
     private SceneType currentSceneType = SceneType.SCENE_SPLASH;
-    
     private BaseScene currentScene;
-    
     private Engine engine = ResourceManager.getInstance().engine;
     
     public enum SceneType
@@ -66,6 +65,37 @@ public class SceneManager
         }
     }
     
+    public void loadGameScene(final Engine mEngine)
+    {
+        setScene(loadingScene);
+        ResourceManager.getInstance().unloadMenuTextures();
+        mEngine.registerUpdateHandler(new TimerHandler(0.1f, new ITimerCallback() 
+        {
+            public void onTimePassed(final TimerHandler pTimerHandler) 
+            {
+                mEngine.unregisterUpdateHandler(pTimerHandler);
+                ResourceManager.getInstance().loadGameResources();
+                gameScene = new GameScene();
+                setScene(gameScene);
+            }
+        }));
+    }
+
+    public void loadMenuScene(final Engine mEngine)
+    {
+        setScene(loadingScene);
+        gameScene.disposeScene();
+        ResourceManager.getInstance().unloadGameTextures();
+        mEngine.registerUpdateHandler(new TimerHandler(0.1f, new ITimerCallback() 
+        {
+            public void onTimePassed(final TimerHandler pTimerHandler) 
+            {
+                mEngine.unregisterUpdateHandler(pTimerHandler);
+                ResourceManager.getInstance().loadMenuTextures();
+                setScene(menuScene);
+            }
+        }));
+    }
     //---------------------------------------------
     // GETTERS AND SETTERS
     //---------------------------------------------
@@ -91,6 +121,15 @@ public class SceneManager
         currentScene = splashScene;
         pOnCreateSceneCallback.onCreateSceneFinished(splashScene);
     }
+    
+    public void createMenuScene(){
+    	ResourceManager.getInstance().loadMenuResources();
+        menuScene = new MainMenuScene();
+        loadingScene = new LoadingScene();
+        SceneManager.getInstance().setScene(menuScene);
+        disposeSplashScene();
+    }
+    
     
     private void disposeSplashScene(){
         ResourceManager.getInstance().unloadSplashScreen();

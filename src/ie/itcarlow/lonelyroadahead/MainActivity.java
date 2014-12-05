@@ -1,5 +1,7 @@
 package ie.itcarlow.lonelyroadahead;
 
+import java.io.IOException;
+
 import org.andengine.engine.Engine;
 import org.andengine.engine.LimitedFPSEngine;
 import org.andengine.engine.camera.Camera;
@@ -11,6 +13,8 @@ import org.andengine.engine.options.WakeLockOptions;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.scene.Scene;
 import org.andengine.ui.activity.BaseGameActivity;
+
+import android.view.KeyEvent;
 
 
 public class MainActivity extends BaseGameActivity {
@@ -47,18 +51,31 @@ public class MainActivity extends BaseGameActivity {
 	}
 
 	@Override
-	public void onPopulateScene(Scene pScene, OnPopulateSceneCallback pOnPopulateSceneCallback) throws Exception {
-		 mEngine.registerUpdateHandler(new TimerHandler(2f, new ITimerCallback() 
-		    {
-		            public void onTimePassed(final TimerHandler pTimerHandler) 
-		            {
-		                mEngine.unregisterUpdateHandler(pTimerHandler);
-		                // load menu resources, create menu scene
-		                // set menu scene using scene manager
-		                // disposeSplashScene();
-		                // READ NEXT ARTICLE FOR THIS PART.
-		            }
-		    }));
-		    pOnPopulateSceneCallback.onPopulateSceneFinished();
+	public void onPopulateScene(Scene pScene, OnPopulateSceneCallback pOnPopulateSceneCallback) throws IOException
+	{
+		mEngine.registerUpdateHandler(new TimerHandler(2f, new ITimerCallback() {
+			public void onTimePassed(final TimerHandler pTimerHandler) 
+			{
+				mEngine.unregisterUpdateHandler(pTimerHandler);
+				SceneManager.getInstance().createMenuScene();
+			}
+		}));
+		pOnPopulateSceneCallback.onPopulateSceneFinished();
+	}
+	
+	@Override
+	protected void onDestroy(){
+		super.onDestroy();
+	    System.exit(0);	
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) 
+	{  
+	    if (keyCode == KeyEvent.KEYCODE_BACK)
+	    {
+	        SceneManager.getInstance().getCurrentScene().onBackKeyPressed();
+	    }
+	    return false; 
 	}
 }
