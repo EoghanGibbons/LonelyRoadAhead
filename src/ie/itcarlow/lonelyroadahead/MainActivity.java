@@ -5,6 +5,8 @@ import java.io.IOException;
 import org.andengine.engine.Engine;
 import org.andengine.engine.LimitedFPSEngine;
 import org.andengine.engine.camera.Camera;
+import org.andengine.engine.handler.IUpdateHandler;
+import org.andengine.engine.handler.IUpdateHandler.IUpdateHandlerMatcher;
 import org.andengine.engine.handler.timer.ITimerCallback;
 import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.engine.options.EngineOptions;
@@ -14,10 +16,13 @@ import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.scene.Scene;
 import org.andengine.ui.activity.BaseGameActivity;
 
+import com.badlogic.gdx.physics.box2d.Body;
+import com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
+
 import android.view.KeyEvent;
 
 
-public class MainActivity extends BaseGameActivity {
+public class MainActivity extends BaseGameActivity implements IUpdateHandler {
 	
 	private Camera camera;
 	private ResourceManager resourceManager;
@@ -60,6 +65,8 @@ public class MainActivity extends BaseGameActivity {
 				SceneManager.getInstance().createMenuScene();
 			}
 		}));
+		
+		mEngine.registerUpdateHandler(this);
 		pOnPopulateSceneCallback.onPopulateSceneFinished();
 	}
 	
@@ -77,5 +84,26 @@ public class MainActivity extends BaseGameActivity {
 	        SceneManager.getInstance().getCurrentScene().onBackKeyPressed();
 	    }
 	    return false; 
+	}
+
+	@Override
+	public void onUpdate(float pSecondsElapsed) {
+		// TODO Auto-generated method stub
+		if ( SceneManager.getInstance().getCurrentSceneType() == SceneManager.SceneType.SCENE_GAME ) {
+			GameScene scene = (GameScene) SceneManager.getInstance().getCurrentScene();
+			boolean status = scene.getHitSwitchStatus();
+			if ( status == true ) {
+				//Body bodySwitch = (Body) sprSwitch.getUserData();
+			//	bodySwitch.setType(BodyType.DynamicBody);
+				//final float angle = bodySwitch.getAngle(); // keeps the body angle    
+				//bodySwitch.setTransform(20, 450, angle);
+			}
+		}
+	}
+
+	@Override
+	public void reset() {
+		// TODO Auto-generated method stub
+		
 	}
 }

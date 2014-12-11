@@ -3,8 +3,6 @@ package ie.itcarlow.lonelyroadahead;
 import ie.itcarlow.lonelyroadahead.SceneManager.SceneType;
 
 import org.andengine.engine.camera.hud.HUD;
-import org.andengine.engine.handler.timer.ITimerCallback;
-import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.Background;
@@ -44,30 +42,34 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 	private Sprite platformThree;
 	private Sprite platformFour;
 	private Sprite sprSwitch;
+	private boolean hitSwitch = false;
+	
+	Body bodySwitch;
 
-	private void createPhysics()
-	{
+	public boolean getHitSwitchStatus() {
+		return hitSwitch;
+	}
+	
+	private void createPhysics(){
 		physicsWorld = new FixedStepPhysicsWorld(60, new Vector2(0, 9.81f), false); 
 		registerUpdateHandler(physicsWorld);
 		physicsWorld.setContactListener(createContactListener());
 	}
 
-	private void createHUD()
-	{
+	private void createHUD(){
 	    gameHUD = new HUD();
 	    
 	    // CREATE SCORE TEXT
 	    scoreText = new Text(20, 420, resourcesManager.font, "Score: 0123456789", vbom);
 	    //scoreText.setAnchorCenter(0, 0);    
-	    scoreText.setText("Score: 0");
+	    scoreText.setText("Click Character to jump");
 	    gameHUD.attachChild(scoreText);
 	    
 	    camera.setHUD(gameHUD);
 	}
 	
 	@Override
-	public void createScene()
-	{
+	public void createScene(){
 	    createBackground();
 	    //createHUD();
 	    createPhysics();
@@ -75,6 +77,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 	    createBoundry();
 	    createLevelOne();
 	    setOnSceneTouchListener(this);
+	    this.engine.registerUpdateHandler(this);
 	}
 
 	@Override
@@ -110,11 +113,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		physicsWorld.registerPhysicsConnector(new PhysicsConnector(roof, bodyRoof, true, true));
 		attachChild(roof);
 		
-		
 		BitmapTextureAtlas mTextureBoundryWall = new BitmapTextureAtlas(engine.getTextureManager(), 10, 460);
 		mBoundryTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTextureBoundryWall, this.activity, "wall.png", 0, 0);
 		mTextureBoundryWall.load();
-		
 		
 		Sprite wallLeft = new Sprite(0,10, mBoundryTextureRegion, engine.getVertexBufferObjectManager());
 		Body bodyWallLeft = PhysicsFactory.createBoxBody(physicsWorld, wallLeft, BodyType.StaticBody, fixDef);
@@ -147,7 +148,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		BitmapTextureAtlas mTextureLargePlatform = new BitmapTextureAtlas(engine.getTextureManager(), 180, 30);
 		ITextureRegion mTextureRegionLargePlatform = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTextureLargePlatform, activity, "largePlatform.png", 0, 0);
 		mTextureLargePlatform.load();
-		
 		//Switch
 		BitmapTextureAtlas mTextureSwitch = new BitmapTextureAtlas(engine.getTextureManager(), 40, 20);
 		ITextureRegion mTextureRegionSwitch = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTextureSwitch, activity, "switch.png", 0, 0);
@@ -182,7 +182,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		attachChild(platformFour);
 		
 		sprSwitch = new Sprite(670, 120, mTextureRegionSwitch, engine.getVertexBufferObjectManager());
-		Body bodySwitch = PhysicsFactory.createBoxBody(physicsWorld, sprSwitch, BodyType.StaticBody, fixDef);
+		bodySwitch = PhysicsFactory.createBoxBody(physicsWorld, sprSwitch, BodyType.StaticBody, fixDef);
 		bodySwitch.setUserData("switch");
 		sprSwitch.setUserData(bodySwitch);
 		physicsWorld.registerPhysicsConnector(new PhysicsConnector(sprSwitch, bodySwitch, true, true));
@@ -199,9 +199,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 	{
 	    camera.setHUD(null);
 	    camera.setCenter(400, 240);
-
-	    // TODO code responsible for disposing scene
-	    // removing all game scene objects.
 	}
 	
 	private ContactListener createContactListener()
@@ -222,6 +219,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                     
                     if ((x2.getBody().getUserData().equals("player") || x2.getBody().getUserData().equals("switch")) && 
                     		((x1.getBody().getUserData().equals("player") || x1.getBody().getUserData().equals("switch")))){
+                    	
+                    	hitSwitch = true;
+                    	
                     	Body platOneBody = (Body) platformOne.getUserData();
                     	platOneBody.setType(BodyType.DynamicBody);
                     	
@@ -233,12 +233,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                     	
                     	Body platFourBody = (Body) platformFour.getUserData();
                     	platFourBody.setType(BodyType.DynamicBody);
-                    	
-                    	/*Body bodySwitch = (Body) sprSwitch.getUserData();
-                    	bodySwitch.setType(BodyType.DynamicBody);
-                    	final float angle = bodySwitch.getAngle(); // keeps the body angle    
-                    	bodySwitch.setTransform(20, 450, angle);*/
-                    	
                     }
                 }
             }
@@ -253,15 +247,6 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                     if (x2.getBody().getUserData().equals("player") || (x1.getBody().getUserData().equals("player")))
                     {
                         canJump = false;
-                    }
-                    
-                    if ((x2.getBody().getUserData().equals("player") || x2.getBody().getUserData().equals("switch")) && 
-                    		((x1.getBody().getUserData().equals("player") || x1.getBody().getUserData().equals("switch")))){
-                    
-                    	Body bodySwitch = (Body) sprSwitch.getUserData();
-                		bodySwitch.setType(BodyType.DynamicBody);
-                		final float angle = bodySwitch.getAngle(); // keeps the body angle    
-                		bodySwitch.setTransform(20, 450, angle);
                     }
                 }
             }
@@ -313,11 +298,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		}
 	
 		//Touch on the player
-		else if ((touchFromLeft > 0) && (touchFromRight < 0) && (touchFromTop >0) && (touchFromBottom < 0) && (canJump)){
+		else if ((touchFromLeft > 0) && (touchFromRight < 0) && (touchFromTop > 0) && (touchFromBottom < 0) && (canJump)){
 			bodyPlayer.setLinearVelocity(bodyPlayer.getLinearVelocity().x, -9);
 		}
-		
 		return false;
 	}
-
 }
