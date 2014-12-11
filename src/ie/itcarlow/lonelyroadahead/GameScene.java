@@ -1,5 +1,7 @@
 package ie.itcarlow.lonelyroadahead;
 
+import java.util.Iterator;
+
 import ie.itcarlow.lonelyroadahead.SceneManager.SceneType;
 
 import org.andengine.engine.camera.hud.HUD;
@@ -29,44 +31,32 @@ import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 
 public class GameScene extends BaseScene implements IOnSceneTouchListener {
+	//---------------------------------------------
+    // VARIABLES
+    //---------------------------------------------
 	private Text scoreText;
 	private HUD gameHUD;
+	
 	private PhysicsWorld physicsWorld;
+	
 	private BitmapTextureAtlas mTexturePlayer;
+	
 	private ITextureRegion mPlayerTextureRegion;
-	private Sprite player;
 	private ITextureRegion mBoundryTextureRegion;
-	private boolean canJump = true;
+	
+	private Sprite player;
 	private Sprite platformOne;
 	private Sprite platformTwo;
 	private Sprite platformThree;
 	private Sprite platformFour;
 	private Sprite sprSwitch;
+
 	private boolean hitSwitch = false;
+	private boolean canJump = true;
 	
-	Body bodySwitch;
-
-	public boolean getHitSwitchStatus() {
-		return hitSwitch;
-	}
-	
-	private void createPhysics(){
-		physicsWorld = new FixedStepPhysicsWorld(60, new Vector2(0, 9.81f), false); 
-		registerUpdateHandler(physicsWorld);
-		physicsWorld.setContactListener(createContactListener());
-	}
-
-	private void createHUD(){
-	    gameHUD = new HUD();
-	    
-	    // CREATE SCORE TEXT
-	    scoreText = new Text(20, 420, resourcesManager.font, "Score: 0123456789", vbom);
-	    //scoreText.setAnchorCenter(0, 0);    
-	    scoreText.setText("Click Character to jump");
-	    gameHUD.attachChild(scoreText);
-	    
-	    camera.setHUD(gameHUD);
-	}
+	//---------------------------------------------
+    // CONSTRUCTOR
+    //---------------------------------------------
 	
 	@Override
 	public void createScene(){
@@ -77,21 +67,29 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 	    createBoundry();
 	    createLevelOne();
 	    setOnSceneTouchListener(this);
-	    this.engine.registerUpdateHandler(this);
+	    //this.engine.registerUpdateHandler(this);
 	}
 
-	@Override
-	public void onBackKeyPressed() {
-		 SceneManager.getInstance().loadMenuScene(engine);
+	//---------------------------------------------
+    // INITIALIZERS
+    //---------------------------------------------
+	
+	private void createPhysics(){
+		physicsWorld = new FixedStepPhysicsWorld(60, new Vector2(0, 9.81f), false); 
+		registerUpdateHandler(physicsWorld);
+		physicsWorld.setContactListener(createContactListener());
 	}
 	
-	public void createPlayer(){
-		mTexturePlayer = new BitmapTextureAtlas(engine.getTextureManager(), 40, 40);  
-		mPlayerTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTexturePlayer, this.activity, "player.png", 0, 0);
-        mTexturePlayer.load();
-        player = new Sprite(20, 430,  mPlayerTextureRegion, engine.getVertexBufferObjectManager());
-        createPhysicsBodies();
-        this.attachChild(player);
+	private void createHUD(){
+	    gameHUD = new HUD();
+	    
+	    // CREATE SCORE TEXT
+	    scoreText = new Text(20, 420, resourcesManager.font, "Score: 0123456789", vbom);
+	    //scoreText.setAnchorCenter(0, 0);    
+	    scoreText.setText("Click Character to jump");
+	    gameHUD.attachChild(scoreText);
+	    
+	    camera.setHUD(gameHUD);
 	}
 	
 	private void createBoundry(){
@@ -128,6 +126,15 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		attachChild(wallRight);
 	}
 	
+	public void createPlayer(){
+		mTexturePlayer = new BitmapTextureAtlas(engine.getTextureManager(), 40, 40);  
+		mPlayerTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTexturePlayer, this.activity, "player.png", 0, 0);
+        mTexturePlayer.load();
+        player = new Sprite(20, 430,  mPlayerTextureRegion, engine.getVertexBufferObjectManager());
+        createPhysicsBodies();
+        this.attachChild(player);
+	}
+	
 	private void createPhysicsBodies(){
 		final FixtureDef fixDef = PhysicsFactory.createFixtureDef(1.5f,0f, 0.3f);
 		
@@ -138,67 +145,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
     	physicsWorld.registerPhysicsConnector(new PhysicsConnector(player, body, true, true));
 	 }
 	
-	public void createLevelOne(){
-		final FixtureDef fixDef = PhysicsFactory.createFixtureDef(0f,0f, 1.0f);
-		//small platforms
-		BitmapTextureAtlas mTexturePlatform = new BitmapTextureAtlas(engine.getTextureManager(), 90, 30);
-		ITextureRegion mTextureRegionPlatform = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTexturePlatform, activity, "platform.png", 0, 0);
-		mTexturePlatform.load();
-		// large platform
-		BitmapTextureAtlas mTextureLargePlatform = new BitmapTextureAtlas(engine.getTextureManager(), 180, 30);
-		ITextureRegion mTextureRegionLargePlatform = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTextureLargePlatform, activity, "largePlatform.png", 0, 0);
-		mTextureLargePlatform.load();
-		//Switch
-		BitmapTextureAtlas mTextureSwitch = new BitmapTextureAtlas(engine.getTextureManager(), 40, 20);
-		ITextureRegion mTextureRegionSwitch = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTextureSwitch, activity, "switch.png", 0, 0);
-		mTextureSwitch.load();
-		
-		platformOne = new Sprite(200, 350, mTextureRegionPlatform, engine.getVertexBufferObjectManager());
-		Body bodyPlatformOne = PhysicsFactory.createBoxBody(physicsWorld, platformOne, BodyType.StaticBody, fixDef);
-		bodyPlatformOne.setUserData("platformOne");
-		platformOne.setUserData(bodyPlatformOne);
-		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformOne, bodyPlatformOne, true, true));
-		attachChild(platformOne);
-		
-		platformTwo = new Sprite(350, 270, mTextureRegionPlatform, engine.getVertexBufferObjectManager());
-		Body bodyPlatformTwo = PhysicsFactory.createBoxBody(physicsWorld, platformTwo, BodyType.StaticBody, fixDef);
-		bodyPlatformTwo.setUserData("platformTwo");
-		platformTwo.setUserData(bodyPlatformTwo);
-		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformTwo, bodyPlatformTwo, true, true));
-		attachChild(platformTwo);
-		
-		platformThree= new Sprite(500, 190, mTextureRegionPlatform, engine.getVertexBufferObjectManager());
-		Body bodyPlatformThree = PhysicsFactory.createBoxBody(physicsWorld, platformThree, BodyType.StaticBody, fixDef);
-		bodyPlatformThree.setUserData("platformThree");
-		platformThree.setUserData(bodyPlatformThree);
-		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformThree, bodyPlatformThree, true, true));
-		attachChild(platformThree);
-		
-		platformFour = new Sprite(600, 140, mTextureRegionLargePlatform, engine.getVertexBufferObjectManager());
-		Body bodyPlatformFour = PhysicsFactory.createBoxBody(physicsWorld, platformFour, BodyType.StaticBody, fixDef);
-		bodyPlatformFour.setUserData("platformFour");
-		platformFour.setUserData(bodyPlatformFour);
-		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformFour, bodyPlatformFour, true, true));
-		attachChild(platformFour);
-		
-		sprSwitch = new Sprite(670, 120, mTextureRegionSwitch, engine.getVertexBufferObjectManager());
-		bodySwitch = PhysicsFactory.createBoxBody(physicsWorld, sprSwitch, BodyType.StaticBody, fixDef);
-		bodySwitch.setUserData("switch");
-		sprSwitch.setUserData(bodySwitch);
-		physicsWorld.registerPhysicsConnector(new PhysicsConnector(sprSwitch, bodySwitch, true, true));
-		attachChild(sprSwitch);
-	}
-
-	@Override
-	public SceneType getSceneType() {
-		return SceneType.SCENE_GAME;
-	}
-
-	@Override
-	public void disposeScene()
+	private void createBackground()
 	{
-	    camera.setHUD(null);
-	    camera.setCenter(400, 240);
+	    setBackground(new Background(Color.WHITE));
 	}
 	
 	private ContactListener createContactListener()
@@ -222,17 +171,28 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                     	
                     	hitSwitch = true;
                     	
-                    	Body platOneBody = (Body) platformOne.getUserData();
-                    	platOneBody.setType(BodyType.DynamicBody);
+                    	Iterator <Body> iter = physicsWorld.getBodies();
                     	
-                    	Body platTwoBody = (Body) platformTwo.getUserData();
-                    	platTwoBody.setType(BodyType.DynamicBody);
+                    	for (int x = 0; x < physicsWorld.getBodyCount(); x++){
                     	
-                    	Body platThreeBody = (Body) platformThree.getUserData();
-                    	platThreeBody.setType(BodyType.DynamicBody);
+                    		Body checkBody = iter.next();
+                    		if (checkBody.getUserData() == "platform"){
+                    			checkBody.setType(BodyType.DynamicBody);
+                    		}
+                    		
                     	
-                    	Body platFourBody = (Body) platformFour.getUserData();
-                    	platFourBody.setType(BodyType.DynamicBody);
+                    		/*Body platOneBody = (Body) platformOne.getUserData();
+                    		platOneBody.setType(BodyType.DynamicBody);
+                    	
+                    		Body platTwoBody = (Body) platformTwo.getUserData();
+                    		platTwoBody.setType(BodyType.DynamicBody);
+                    	
+                    		Body platThreeBody = (Body) platformThree.getUserData();
+                    		platThreeBody.setType(BodyType.DynamicBody);
+                    	
+                    		Body platFourBody = (Body) platformFour.getUserData();
+                    		platFourBody.setType(BodyType.DynamicBody);*/
+                    	}
                     }
                 }
             }
@@ -264,11 +224,10 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         return contactListener;
     }
 	
-	private void createBackground()
-	{
-	    setBackground(new Background(Color.WHITE));
-	}
-
+	//---------------------------------------------
+    // CLASS LOGIC
+    //---------------------------------------------
+	
 	@Override
 	public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
 		float touchFromRight = pSceneTouchEvent.getX() - (player.getX() + player.getWidth());
@@ -302,5 +261,106 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 			bodyPlayer.setLinearVelocity(bodyPlayer.getLinearVelocity().x, -9);
 		}
 		return false;
+	}
+	
+	@Override
+	public void disposeScene()
+	{
+	    camera.setHUD(null);
+	    camera.setCenter(400, 240);
+	}
+	
+	@Override
+	public void onBackKeyPressed() {
+		 SceneManager.getInstance().loadMenuScene(engine);
+	}
+	
+	//---------------------------------------------
+    // GETTERS AND SETTERS
+    //---------------------------------------------
+	
+	public boolean getHitSwitchStatus() {
+		return hitSwitch;
+	}
+	
+	public void setHitSwitchStatus(boolean pStatus) {
+		hitSwitch = pStatus;
+	}
+	
+	@Override
+	public SceneType getSceneType() {
+		return SceneType.SCENE_GAME;
+	}
+	
+	public void setNewSwitchBody(float newX, float newY){
+		PhysicsConnector physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(sprSwitch);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		
+		final FixtureDef fixDef = PhysicsFactory.createFixtureDef(1.5f,0f, 0.3f);
+		
+		sprSwitch.setPosition(newX, newY);
+		Body body = PhysicsFactory.createBoxBody(physicsWorld, sprSwitch, BodyType.StaticBody, fixDef);
+		body.setFixedRotation(true);
+		body.setUserData("switch");
+		sprSwitch.setUserData(body); 
+    	physicsWorld.registerPhysicsConnector(new PhysicsConnector(sprSwitch, body, true, true));
+	}
+	
+	//---------------------------------------------
+    // LEVEL CREATION
+    //---------------------------------------------
+	
+	public void createLevelOne(){
+		final FixtureDef fixDef = PhysicsFactory.createFixtureDef(0f,0f, 1.0f);
+		//small platforms
+		BitmapTextureAtlas mTexturePlatform = new BitmapTextureAtlas(engine.getTextureManager(), 90, 30);
+		ITextureRegion mTextureRegionPlatform = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTexturePlatform, activity, "platform.png", 0, 0);
+		mTexturePlatform.load();
+		// large platform
+		BitmapTextureAtlas mTextureLargePlatform = new BitmapTextureAtlas(engine.getTextureManager(), 180, 30);
+		ITextureRegion mTextureRegionLargePlatform = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTextureLargePlatform, activity, "largePlatform.png", 0, 0);
+		mTextureLargePlatform.load();
+		//Switch
+		BitmapTextureAtlas mTextureSwitch = new BitmapTextureAtlas(engine.getTextureManager(), 40, 20);
+		ITextureRegion mTextureRegionSwitch = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTextureSwitch, activity, "switch.png", 0, 0);
+		mTextureSwitch.load();
+		
+		platformOne = new Sprite(200, 350, mTextureRegionPlatform, engine.getVertexBufferObjectManager());
+		Body bodyPlatformOne = PhysicsFactory.createBoxBody(physicsWorld, platformOne, BodyType.StaticBody, fixDef);
+		bodyPlatformOne.setUserData("platform");
+		platformOne.setUserData(bodyPlatformOne);
+		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformOne, bodyPlatformOne, true, true));
+		attachChild(platformOne);
+		
+		platformTwo = new Sprite(350, 270, mTextureRegionPlatform, engine.getVertexBufferObjectManager());
+		Body bodyPlatformTwo = PhysicsFactory.createBoxBody(physicsWorld, platformTwo, BodyType.StaticBody, fixDef);
+		bodyPlatformTwo.setUserData("platform");
+		platformTwo.setUserData(bodyPlatformTwo);
+		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformTwo, bodyPlatformTwo, true, true));
+		attachChild(platformTwo);
+		
+		platformThree= new Sprite(500, 190, mTextureRegionPlatform, engine.getVertexBufferObjectManager());
+		Body bodyPlatformThree = PhysicsFactory.createBoxBody(physicsWorld, platformThree, BodyType.StaticBody, fixDef);
+		bodyPlatformThree.setUserData("platform");
+		platformThree.setUserData(bodyPlatformThree);
+		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformThree, bodyPlatformThree, true, true));
+		attachChild(platformThree);
+		
+		platformFour = new Sprite(600, 140, mTextureRegionLargePlatform, engine.getVertexBufferObjectManager());
+		Body bodyPlatformFour = PhysicsFactory.createBoxBody(physicsWorld, platformFour, BodyType.StaticBody, fixDef);
+		bodyPlatformFour.setUserData("platform");
+		platformFour.setUserData(bodyPlatformFour);
+		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformFour, bodyPlatformFour, true, true));
+		attachChild(platformFour);
+		
+		sprSwitch = new Sprite(670, 120, mTextureRegionSwitch, engine.getVertexBufferObjectManager());
+		Body bodySwitch = PhysicsFactory.createBoxBody(physicsWorld, sprSwitch, BodyType.StaticBody, fixDef);
+		bodySwitch.setUserData("switch");
+		sprSwitch.setUserData(bodySwitch);
+		physicsWorld.registerPhysicsConnector(new PhysicsConnector(sprSwitch, bodySwitch, true, true));
+		attachChild(sprSwitch);
 	}
 }

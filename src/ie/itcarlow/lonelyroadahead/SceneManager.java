@@ -96,6 +96,7 @@ public class SceneManager
             }
         }));
     }
+    
     //---------------------------------------------
     // GETTERS AND SETTERS
     //---------------------------------------------
@@ -129,7 +130,6 @@ public class SceneManager
         SceneManager.getInstance().setScene(menuScene);
         disposeSplashScene();
     }
-    
     
     private void disposeSplashScene(){
         ResourceManager.getInstance().unloadSplashScreen();

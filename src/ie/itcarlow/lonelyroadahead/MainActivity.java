@@ -14,6 +14,7 @@ import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.WakeLockOptions;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
 import org.andengine.entity.scene.Scene;
+import org.andengine.extension.physics.box2d.PhysicsConnector;
 import org.andengine.ui.activity.BaseGameActivity;
 
 import com.badlogic.gdx.physics.box2d.Body;
@@ -89,14 +90,10 @@ public class MainActivity extends BaseGameActivity implements IUpdateHandler {
 	@Override
 	public void onUpdate(float pSecondsElapsed) {
 		// TODO Auto-generated method stub
-		if ( SceneManager.getInstance().getCurrentSceneType() == SceneManager.SceneType.SCENE_GAME ) {
+		if ( SceneManager.getInstance().getCurrentSceneType() == SceneManager.SceneType.SCENE_GAME) {
 			GameScene scene = (GameScene) SceneManager.getInstance().getCurrentScene();
-			boolean status = scene.getHitSwitchStatus();
-			if ( status == true ) {
-				//Body bodySwitch = (Body) sprSwitch.getUserData();
-			//	bodySwitch.setType(BodyType.DynamicBody);
-				//final float angle = bodySwitch.getAngle(); // keeps the body angle    
-				//bodySwitch.setTransform(20, 450, angle);
+			if (scene.getHitSwitchStatus()) {
+				scene.setNewSwitchBody(20, 450);
 			}
 		}
 	}
