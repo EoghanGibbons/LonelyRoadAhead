@@ -50,6 +50,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 	private Sprite platformThree;
 	private Sprite platformFour;
 	private Sprite sprSwitch;
+	private Sprite exit;
 
 	private boolean hitSwitch = false;
 	private boolean canJump = true;
