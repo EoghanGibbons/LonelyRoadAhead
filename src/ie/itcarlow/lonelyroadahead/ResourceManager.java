@@ -1,5 +1,9 @@
 package ie.itcarlow.lonelyroadahead;
 
+import java.io.IOException;
+
+import org.andengine.audio.music.Music;
+import org.andengine.audio.music.MusicFactory;
 import org.andengine.engine.Engine;
 import org.andengine.engine.camera.Camera;
 import org.andengine.opengl.font.Font;
@@ -32,13 +36,20 @@ public class ResourceManager
     public VertexBufferObjectManager vbom;
     
     public ITextureRegion splash_region;
+    public ITextureRegion gameOver_region;
     public ITextureRegion menu_background_region;
     public ITextureRegion play_region;
     public ITextureRegion options_region;
     
     private BitmapTextureAtlas splashTextureAtlas;   
+    private BitmapTextureAtlas gameOverTextureAtlas;
     private BuildableBitmapTextureAtlas menuTextureAtlas;
     public Font font;
+    
+    //audio
+    public static Music gameMusic;
+    public static Music menuMusic;
+    public static Music jumpSound;
     
     //---------------------------------------------
     // TEXTURES & TEXTURE REGIONS
@@ -90,7 +101,12 @@ public class ResourceManager
     
     private void loadMenuAudio()
     {
-        
+    	MusicFactory.setAssetBasePath("");
+        try {
+        	menuMusic = MusicFactory.createMusicFromAsset(engine.getMusicManager(), activity, "mainMenuMusic.mp3");
+		}  catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 
     private void loadMenuFonts(){
@@ -103,7 +119,6 @@ public class ResourceManager
     
     public void unloadGameTextures()
     {
-        // TODO (Since we did not create any textures for game scene yet)
     }
     
     private void loadGameGraphics()
@@ -118,7 +133,13 @@ public class ResourceManager
     
     private void loadGameAudio()
     {
-        
+    	MusicFactory.setAssetBasePath("");
+        try {
+			gameMusic = MusicFactory.createMusicFromAsset(engine.getMusicManager(), activity, "music.mp3");
+			jumpSound = MusicFactory.createMusicFromAsset(engine.getMusicManager(), activity, "jump.mp3");
+		}  catch (IOException e) {
+			e.printStackTrace();
+		}
     }
     
     public void loadSplashScreen(){
@@ -131,6 +152,18 @@ public class ResourceManager
     public void unloadSplashScreen(){
     	splashTextureAtlas.unload();
     	splash_region = null;
+    }
+    
+    public void loadGameOverScreen(){
+    	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("");
+    	gameOverTextureAtlas = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
+    	gameOver_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameOverTextureAtlas, activity, "gameover.png", 0, 0);
+    	gameOverTextureAtlas.load();
+    }
+    
+    public void unloadGameOverScreen(){
+    	gameOverTextureAtlas.unload();
+    	gameOver_region = null;
     }
     
     /**

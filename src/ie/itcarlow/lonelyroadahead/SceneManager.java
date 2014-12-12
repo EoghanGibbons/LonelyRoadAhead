@@ -15,6 +15,7 @@ public class SceneManager
     private BaseScene menuScene;
     private BaseScene gameScene;
     private BaseScene loadingScene;
+    private BaseScene gameOverScene;
     
     //---------------------------------------------
     // VARIABLES
@@ -31,6 +32,7 @@ public class SceneManager
         SCENE_MENU,
         SCENE_GAME,
         SCENE_LOADING,
+        SCENE_GAMEOVER,
     }
     
     //---------------------------------------------
@@ -60,6 +62,9 @@ public class SceneManager
             case SCENE_LOADING:
                 setScene(loadingScene);
                 break;
+            case SCENE_GAMEOVER:
+            	setScene(gameOverScene);
+            	break;
             default:
                 break;
         }
@@ -97,6 +102,21 @@ public class SceneManager
         }));
     }
     
+    public void loadGameOverScene(final Engine mEngine){
+    	setScene(loadingScene);
+    	gameScene.disposeScene();
+    	ResourceManager.getInstance().unloadGameTextures();
+        mEngine.registerUpdateHandler(new TimerHandler(0.1f, new ITimerCallback() 
+        {
+            public void onTimePassed(final TimerHandler pTimerHandler) 
+            {
+                mEngine.unregisterUpdateHandler(pTimerHandler);
+                ResourceManager.getInstance().loadGameOverScreen();
+                setScene(gameOverScene);
+            }
+        }));
+    }
+    
     //---------------------------------------------
     // GETTERS AND SETTERS
     //---------------------------------------------
@@ -123,12 +143,22 @@ public class SceneManager
         pOnCreateSceneCallback.onCreateSceneFinished(splashScene);
     }
     
+    public void createGameOverScene(){
+        ResourceManager.getInstance().loadSplashScreen();
+        loadGameOverScene(engine);
+        gameOverScene = new GameOverScreen();
+        gameScene.disposeScene();
+        
+        //pOnCreateSceneCallback.onCreateSceneFinished(gameOverScene);
+    }
+    
     public void createMenuScene(){
     	ResourceManager.getInstance().loadMenuResources();
         menuScene = new MainMenuScene();
         loadingScene = new LoadingScene();
         SceneManager.getInstance().setScene(menuScene);
         disposeSplashScene();
+        
     }
     
     private void disposeSplashScene(){

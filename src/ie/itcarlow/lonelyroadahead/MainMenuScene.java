@@ -47,6 +47,7 @@ public class MainMenuScene extends BaseScene implements IOnMenuItemClickListener
 	    {
 	        case MENU_PLAY:
 	            //Load Game Scene!
+	        	ResourceManager.menuMusic.stop();
 	            SceneManager.getInstance().loadGameScene(engine);
 	            return true;
 	       // case MENU_OPTIONS:
@@ -58,6 +59,8 @@ public class MainMenuScene extends BaseScene implements IOnMenuItemClickListener
 	
 	@Override
 	public void createScene() {
+		ResourceManager.menuMusic.play();
+    	ResourceManager.menuMusic.setLooping(true);
 		createBackground();
 		createMenuChildScene();
 	}

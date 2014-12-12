@@ -94,6 +94,18 @@ public class MainActivity extends BaseGameActivity implements IUpdateHandler {
 			GameScene scene = (GameScene) SceneManager.getInstance().getCurrentScene();
 			if (scene.getHitSwitchStatus()) {
 				scene.setNewSwitchBody(20, 450);
+				scene.setHitSwitchStatus(false);
+			}
+			if (scene.getCreateExit()){
+				scene.createExit(40,40);
+				scene.setCreateExit(false);
+			}
+			if (scene.getPlatformMoveStatus()){
+				scene.levelOneNewPlatformPositioning();
+				scene.setPlatformMoveStatus(false);
+			}
+			if (scene.gameOver){
+				SceneManager.getInstance().createGameOverScene();
 			}
 		}
 	}

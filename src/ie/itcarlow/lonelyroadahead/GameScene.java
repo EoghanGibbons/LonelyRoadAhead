@@ -54,6 +54,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 
 	private boolean hitSwitch = false;
 	private boolean canJump = true;
+	private boolean createExit = false;
+	private boolean movePlatforms = false;
+	public boolean gameOver = false;
 	
 	//---------------------------------------------
     // CONSTRUCTOR
@@ -61,12 +64,15 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 	
 	@Override
 	public void createScene(){
+		ResourceManager.gameMusic.play();
+    	ResourceManager.gameMusic.setLooping(true);
 	    createBackground();
 	    //createHUD();
 	    createPhysics();
 	    createPlayer();
 	    createBoundry();
 	    createLevelOne();
+	    //createLevelTwo();
 	    setOnSceneTouchListener(this);
 	    //this.engine.registerUpdateHandler(this);
 	}
@@ -180,20 +186,27 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                     		if (checkBody.getUserData() == "platform"){
                     			checkBody.setType(BodyType.DynamicBody);
                     		}
-                    		
-                    	
-                    		/*Body platOneBody = (Body) platformOne.getUserData();
-                    		platOneBody.setType(BodyType.DynamicBody);
-                    	
-                    		Body platTwoBody = (Body) platformTwo.getUserData();
-                    		platTwoBody.setType(BodyType.DynamicBody);
-                    	
-                    		Body platThreeBody = (Body) platformThree.getUserData();
-                    		platThreeBody.setType(BodyType.DynamicBody);
-                    	
-                    		Body platFourBody = (Body) platformFour.getUserData();
-                    		platFourBody.setType(BodyType.DynamicBody);*/
                     	}
+                    }
+                    
+                    if ((x2.getBody().getUserData().equals("player") || x2.getBody().getUserData().equals("switchTwo")) && 
+                    		((x1.getBody().getUserData().equals("player") || x1.getBody().getUserData().equals("switchTwo")))){
+                    	createExit = true;
+                    	
+                    	Iterator <Body> iter = physicsWorld.getBodies();
+                    	
+                    	for (int x = 0; x < physicsWorld.getBodyCount(); x++){
+                    	
+                    		Body checkBody = iter.next();
+                    		if (checkBody.getUserData() == "platform"){
+                    			movePlatforms = true;
+                    		}
+                    	}
+                    }
+                    
+                    if ((x2.getBody().getUserData().equals("player") || x2.getBody().getUserData().equals("exit")) && 
+                    		((x1.getBody().getUserData().equals("player") || x1.getBody().getUserData().equals("exit")))){
+                    	gameOver = true;
                     }
                 }
             }
@@ -225,6 +238,21 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
         return contactListener;
     }
 	
+	public void createExit(float exitX, float exitY){
+		BitmapTextureAtlas exitTexture = new BitmapTextureAtlas(engine.getTextureManager(), 40,40);
+		ITextureRegion exitTextureRegion = BitmapTextureAtlasTextureRegionFactory.createFromAsset(exitTexture, activity, "exit.png", 0, 0);
+		exitTexture.load();
+		exit = new Sprite(exitX,exitY, exitTextureRegion, engine.getVertexBufferObjectManager());
+		
+		final FixtureDef fixDef = PhysicsFactory.createFixtureDef(1.5f,0f, 0.3f);
+		Body exitBody = PhysicsFactory.createBoxBody(physicsWorld, exit, BodyType.StaticBody, fixDef);
+		exitBody.setFixedRotation(true);
+		exitBody.setUserData("exit");
+    	exit.setUserData(exitBody); 
+    	physicsWorld.registerPhysicsConnector(new PhysicsConnector(exit, exitBody, true, true));
+    	this.attachChild(exit);
+	}
+	
 	//---------------------------------------------
     // CLASS LOGIC
     //---------------------------------------------
@@ -237,7 +265,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		float touchFromTop = pSceneTouchEvent.getY() - player.getY();
 		Body bodyPlayer = (Body) player.getUserData();
 		//Touch to the right of the player
-		if ((touchFromRight > 0) && (touchFromRight < 600)){
+		if ((touchFromRight > 0) && (touchFromRight < 800)){
 			if (touchFromRight > 30){
 				bodyPlayer.setLinearVelocity(5, bodyPlayer.getLinearVelocity().y);
 			}
@@ -247,7 +275,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		}
 		
 		//Touch to the left of the player
-		else if ((touchFromLeft < 0) && (touchFromLeft > -600)){
+		else if ((touchFromLeft < 0) && (touchFromLeft > -800)){
 			
 			if (touchFromLeft < -30){
 				bodyPlayer.setLinearVelocity(-5, bodyPlayer.getLinearVelocity().y);
@@ -260,6 +288,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		//Touch on the player
 		else if ((touchFromLeft > 0) && (touchFromRight < 0) && (touchFromTop > 0) && (touchFromBottom < 0) && (canJump)){
 			bodyPlayer.setLinearVelocity(bodyPlayer.getLinearVelocity().x, -9);
+			ResourceManager.jumpSound.play();
 		}
 		return false;
 	}
@@ -269,11 +298,72 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 	{
 	    camera.setHUD(null);
 	    camera.setCenter(400, 240);
+	    ResourceManager.gameMusic.stop();
 	}
 	
 	@Override
 	public void onBackKeyPressed() {
 		 SceneManager.getInstance().loadMenuScene(engine);
+	}
+	
+	public void levelOneNewPlatformPositioning(){
+		PhysicsConnector physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(platformOne);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		
+		final FixtureDef fixDef = PhysicsFactory.createFixtureDef(1.5f,0f, 0.3f);
+		
+		platformOne.setPosition(600, 400);
+		Body body = PhysicsFactory.createBoxBody(physicsWorld, platformOne, BodyType.StaticBody, fixDef);
+		body.setFixedRotation(true);
+		body.setUserData("platform");
+		platformOne.setUserData(body); 
+    	physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformOne, body, true, true));
+    	
+    	
+    	physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(platformTwo);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		
+		platformTwo.setPosition(400, 300);
+		Body bodyTwo = PhysicsFactory.createBoxBody(physicsWorld, platformTwo, BodyType.StaticBody, fixDef);
+		bodyTwo.setFixedRotation(true);
+		bodyTwo.setUserData("platform");
+		platformTwo.setUserData(bodyTwo); 
+    	physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformTwo, bodyTwo, true, true));
+    	
+    	
+    	physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(platformThree);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		
+		platformThree.setPosition(300, 200);
+		Body bodyThree = PhysicsFactory.createBoxBody(physicsWorld, platformThree, BodyType.StaticBody, fixDef);
+		bodyThree.setFixedRotation(true);
+		bodyThree.setUserData("platform");
+		platformThree.setUserData(bodyThree); 
+    	physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformThree, bodyThree, true, true));
+    	
+    	
+    	physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(platformFour);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		
+		platformFour.setPosition(20, 80);
+		Body bodyFour = PhysicsFactory.createBoxBody(physicsWorld, platformFour, BodyType.StaticBody, fixDef);
+		bodyFour.setFixedRotation(true);
+		bodyFour.setUserData("platform");
+		platformFour.setUserData(bodyFour); 
+    	physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformFour, bodyFour, true, true));
+	
 	}
 	
 	//---------------------------------------------
@@ -305,9 +395,25 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		sprSwitch.setPosition(newX, newY);
 		Body body = PhysicsFactory.createBoxBody(physicsWorld, sprSwitch, BodyType.StaticBody, fixDef);
 		body.setFixedRotation(true);
-		body.setUserData("switch");
+		body.setUserData("switchTwo");
 		sprSwitch.setUserData(body); 
     	physicsWorld.registerPhysicsConnector(new PhysicsConnector(sprSwitch, body, true, true));
+	}
+	
+	public boolean getCreateExit(){
+		return createExit;
+	}
+	
+	public void setCreateExit(boolean pStatus){
+		createExit = pStatus;
+	}
+
+	public boolean getPlatformMoveStatus(){
+		return movePlatforms;
+	}
+	
+	public void setPlatformMoveStatus(boolean pStatus){
+		movePlatforms = pStatus;
 	}
 	
 	//---------------------------------------------
@@ -315,6 +421,7 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
     //---------------------------------------------
 	
 	public void createLevelOne(){
+
 		final FixtureDef fixDef = PhysicsFactory.createFixtureDef(0f,0f, 1.0f);
 		//small platforms
 		BitmapTextureAtlas mTexturePlatform = new BitmapTextureAtlas(engine.getTextureManager(), 90, 30);
@@ -363,5 +470,42 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		sprSwitch.setUserData(bodySwitch);
 		physicsWorld.registerPhysicsConnector(new PhysicsConnector(sprSwitch, bodySwitch, true, true));
 		attachChild(sprSwitch);
+	}
+	
+	public void createLevelTwo(){
+		final FixtureDef fixDef = PhysicsFactory.createFixtureDef(0f,0f, 1.0f);
+		//small platforms
+		BitmapTextureAtlas mTexturePlatform = new BitmapTextureAtlas(engine.getTextureManager(), 180, 30);
+		ITextureRegion mTextureRegionPlatform = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTexturePlatform, activity, "largePlatform.png", 0, 0);
+		mTexturePlatform.load();
+		//vertical Platoforms
+		BitmapTextureAtlas mTextureLeftWall = new BitmapTextureAtlas(engine.getTextureManager(), 20, 350);
+		ITextureRegion mTextureRegionLeftWall = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTextureLeftWall, activity, "mossyWallRight.png", 0, 0);
+		mTextureLeftWall.load();
+		
+		BitmapTextureAtlas mTextureRightWall = new BitmapTextureAtlas(engine.getTextureManager(), 20, 350);
+		ITextureRegion mTextureRegionRightWall = BitmapTextureAtlasTextureRegionFactory.createFromAsset(mTextureRightWall, activity, "mossyWallLeft.png", 0, 0);
+		mTextureRightWall.load();
+		
+		platformOne = new Sprite(485, 65, mTextureRegionPlatform, engine.getVertexBufferObjectManager());
+		Body bodyPlatformOne = PhysicsFactory.createBoxBody(physicsWorld, platformOne, BodyType.StaticBody, fixDef);
+		bodyPlatformOne.setUserData("platform");
+		platformOne.setUserData(bodyPlatformOne);
+		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformOne, bodyPlatformOne, true, true));
+		attachChild(platformOne);
+		
+		platformTwo = new Sprite(330, 65, mTextureRegionLeftWall, engine.getVertexBufferObjectManager());
+		Body bodyPlatformTwo = PhysicsFactory.createBoxBody(physicsWorld, platformTwo, BodyType.StaticBody, fixDef);
+		bodyPlatformTwo.setUserData("platform");
+		platformTwo.setUserData(bodyPlatformTwo);
+		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformTwo, bodyPlatformTwo, true, true));
+		attachChild(platformTwo);
+		
+		platformThree= new Sprite(470, 65, mTextureRegionRightWall, engine.getVertexBufferObjectManager());
+		Body bodyPlatformThree = PhysicsFactory.createBoxBody(physicsWorld, platformThree, BodyType.StaticBody, fixDef);
+		bodyPlatformThree.setUserData("platform");
+		platformThree.setUserData(bodyPlatformThree);
+		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformThree, bodyPlatformThree, true, true));
+		attachChild(platformThree);
 	}
 }
