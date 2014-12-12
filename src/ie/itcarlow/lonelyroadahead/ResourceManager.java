@@ -147,6 +147,10 @@ public class ResourceManager
     	splashTextureAtlas = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
     	splash_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(splashTextureAtlas, activity, "splash.png", 0, 0);
     	splashTextureAtlas.load();
+    	BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("");
+    	gameOverTextureAtlas = new BitmapTextureAtlas(activity.getTextureManager(), 256, 256, TextureOptions.BILINEAR);
+    	gameOver_region = BitmapTextureAtlasTextureRegionFactory.createFromAsset(gameOverTextureAtlas, activity, "gameover.png", 0, 0);
+    	gameOverTextureAtlas.load();
     }
     
     public void unloadSplashScreen(){

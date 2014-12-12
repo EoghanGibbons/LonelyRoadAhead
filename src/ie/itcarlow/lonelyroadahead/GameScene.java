@@ -57,6 +57,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 	private boolean createExit = false;
 	private boolean movePlatforms = false;
 	public boolean gameOver = false;
+	public boolean startLevelTwo=false;
+	
+	private int level = 0;
 	
 	//---------------------------------------------
     // CONSTRUCTOR
@@ -206,7 +209,12 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
                     
                     if ((x2.getBody().getUserData().equals("player") || x2.getBody().getUserData().equals("exit")) && 
                     		((x1.getBody().getUserData().equals("player") || x1.getBody().getUserData().equals("exit")))){
-                    	gameOver = true;
+                    	if (level < 2){
+                    		startLevelTwo = true;
+                    	}
+                    	else {
+                    		gameOver = true;
+                    	}
                     }
                 }
             }
@@ -470,6 +478,61 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		sprSwitch.setUserData(bodySwitch);
 		physicsWorld.registerPhysicsConnector(new PhysicsConnector(sprSwitch, bodySwitch, true, true));
 		attachChild(sprSwitch);
+		
+		level = 1;
+	}
+	
+	public void destroyLevelOne(){
+		PhysicsConnector physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(platformOne);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		//platformOne.reset();
+		detachChild(platformOne);
+		platformOne.dispose();
+		
+		physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(platformTwo);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		detachChild(platformTwo);
+		platformTwo.dispose();
+		
+		
+		physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(platformThree);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		detachChild(platformThree);
+		platformThree.dispose();
+		
+		
+		physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(platformFour);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		detachChild(platformFour);
+		platformFour.dispose();
+		
+		physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(exit);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		detachChild(exit);
+		exit.dispose();
+		
+		physicsConnector = physicsWorld.getPhysicsConnectorManager().findPhysicsConnectorByShape(sprSwitch);
+		// Unregister the physics connector
+		physicsWorld.unregisterPhysicsConnector(physicsConnector);
+		// Destroy the body
+		physicsWorld.destroyBody(physicsConnector.getBody());
+		detachChild(sprSwitch);
+		sprSwitch.dispose();
 	}
 	
 	public void createLevelTwo(){
@@ -507,5 +570,9 @@ public class GameScene extends BaseScene implements IOnSceneTouchListener {
 		platformThree.setUserData(bodyPlatformThree);
 		physicsWorld.registerPhysicsConnector(new PhysicsConnector(platformThree, bodyPlatformThree, true, true));
 		attachChild(platformThree);
+		
+		createExit(555, 25);
+		
+		level = 2;
 	}
 }

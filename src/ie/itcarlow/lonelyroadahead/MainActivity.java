@@ -107,6 +107,11 @@ public class MainActivity extends BaseGameActivity implements IUpdateHandler {
 			if (scene.gameOver){
 				SceneManager.getInstance().createGameOverScene();
 			}
+			if (scene.startLevelTwo){
+				scene.destroyLevelOne();
+				scene.createLevelTwo();
+				scene.startLevelTwo = false;
+			}
 		}
 	}
 
